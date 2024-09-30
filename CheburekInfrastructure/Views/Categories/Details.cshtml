@@ -1,0 +1,41 @@
+﻿@model CheburekInfrastructure.Models.Category
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>@Model.Name</h1>
+
+<div>
+    <h4>Category</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ImagePath)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ImagePath)
+        </dd>
+    </dl>
+</div>
+
+<h2>Products in this category:</h2>
+<ul>
+    @foreach (var product in Model.Products)
+    {
+        <li>
+            <a href="@Url.Action("Details", "Products", new { id = product.Id })">@product.Name</a> - @product.Price.ToString("C")
+        </li>
+    }
+</ul>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

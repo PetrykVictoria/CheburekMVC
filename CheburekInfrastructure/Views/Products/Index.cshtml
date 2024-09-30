@@ -1,0 +1,39 @@
+﻿@model IEnumerable<CheburekInfrastructure.Models.Product>
+@inject CheburekInfrastructure.Models.CheburekMVCContext _context
+
+@{
+    ViewData["Title"] = "Products";
+    var cartItems = _context.Carts.Select(c => c.ProductId).ToList(); // Отримайте всі ProductId з кошика
+}
+
+<h1>Продукти</h1>
+
+<p>
+    <a asp-action="Create">Додати новий</a>
+</p>
+
+<div class="card-list">
+    @foreach (var item in Model)
+    {
+        <div class="card">
+            <h2>@item.Name</h2>
+            <p><strong>Категорія:</strong> @(item.Category?.Name ?? "Невідомо")</p>
+            <p><strong>Ціна:</strong> @item.Price.ToString("C")</p>
+            <p><strong>Опис:</strong> @item.Description</p>
+            <img src="@item.ImagePath" alt="Product Image" class="card-image fixed-size-image" />
+            <div class="card-actions">
+                <form asp-action="AddToCart" asp-controller="Carts" method="post" style="display:inline;">
+                    <input type="hidden" name="productId" value="@item.Id" />
+                    <button type="submit" class="btn @(cartItems.Contains(item.Id) ? "btn-warning" : "btn-primary")" @(cartItems.Contains(item.Id) ? "disabled" : "")>
+                        @(cartItems.Contains(item.Id) ? "Додано до кошика" : "Додати в кошик")
+                    </button>
+                </form>
+                <div class="action-buttons">
+                    <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Подробиці</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

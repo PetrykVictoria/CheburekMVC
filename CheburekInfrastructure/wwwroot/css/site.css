@@ -1,0 +1,93 @@
+/* Підключення шрифтів */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Giga+Sans:wght@500&display=swap'); /* Importing Giga Sans Medium */
+
+/* site.css */
+body {
+    font-family: "Giga Sans Medium", sans-serif;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+.img-box img {
+    width: 50%; /* Змінює ширину зображення до 50% від початкової */
+    height: auto; /* Зберігає пропорції висоти */
+}
+
+.card-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Три колонки */
+    gap: 20px;
+}
+
+.card {
+    border: 1px solid #ccc;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s; /* Додаємо плавний перехід */
+}
+
+    .card:hover {
+        transform: scale(1.05); /* Збільшуємо масштаб картки */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Збільшуємо тінь */
+    }
+
+    .card h2 {
+        margin-top: 0;
+    }
+
+.card-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px;
+}
+
+.card-actions .action-buttons {
+    margin-top: 10px;
+    display: block;
+}
+
+.card-actions a {
+    margin: 0 5px;
+}
+
+.bg-box img {
+    width: 100%; 
+    height: auto; 
+    display: block; 
+}
+
+.hero_area {
+    background-image: url('/images/Лого.jpg');
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
+    height: 100vh; 
+    width: 100%; 
+}
+
+
+.fixed-size-image {
+    width: 375px; 
+    height: 250px; 
+    object-fit: cover; 
+}

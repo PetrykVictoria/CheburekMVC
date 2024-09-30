@@ -1,0 +1,261 @@
+﻿@model IEnumerable<CheburekInfrastructure.Models.Cart>
+
+@{
+    ViewData["Title"] = "Cart";
+    decimal totalSum = Model.Sum(item => item.CalculatedTotalPrice); // Calculate total sum
+}
+
+<h2>Кошик</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Фото</th>
+            <th>Категорія</th>
+            <th>Назва</th>
+            <th>Ціна за одиницю</th>
+            <th>Кількість</th>
+            <th>Загальна ціна</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr data-cart-id="@item.Id">
+                <td>
+                    <img src="@item.Product.ImagePath" alt="@item.Product.Name" style="width: 100px; height: auto;" />
+                </td>
+                <td>@item.Product.Category.Name</td>
+                <td>@item.Product.Name</td>
+                <td class="unit-price">@item.Product.Price.ToString("C")</td>
+                <td>
+                    <div class="input-group">
+                        <button type="button" class="btn btn-outline-secondary btn-minus">-</button>
+                        <input type="number" value="@item.Quantity" min="1" class="form-control quantity-input" data-price="@item.Product.Price" />
+                        <button type="button" class="btn btn-outline-secondary btn-plus">+</button>
+                    </div>
+                </td>
+                <td class="total-price" data-price="@item.CalculatedTotalPrice">@item.CalculatedTotalPrice.ToString("C")</td>
+                <td>
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-danger">Видалити з кошика</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="text-right">
+    <h4>Загальна сума: <span id="totalSum">@totalSum.ToString("C")</span></h4>
+</div>
+
+<div class="d-flex justify-content-between">
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#orderModal">Замовити</button>
+    <a asp-controller="Products" asp-action="Index" class="btn btn-primary">Продовжити покупки</a>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderModalLabel">Ваше замовлення</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="orderForm" asp-action="CreateOrderFromCart" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <!-- Вибір способу оплати -->
+                    <div class="mb-3">
+                        <label for="paymentMethod" class="form-label">Спосіб оплати</label>
+                        <select class="form-select" id="paymentMethod" name="PaymentMethod" required>
+                            <option value="" disabled selected>Оберіть спосіб оплати</option>
+                            <option value="cash">Готівкою</option>
+                            <option value="card">Карткою</option>
+                        </select>
+                        <div class="invalid-feedback">Будь ласка, виберіть спосіб оплати.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Name" class="form-label">Прізвище та ім'я</label>
+                        <input type="text" class="form-control" id="Name" name="Name" required pattern="[A-Za-zА-Яа-яЁёІіЇїЄє\s]+" title="Введіть коректне ім'я та прізвище">
+                        <div class="invalid-feedback">Будь ласка, введіть коректне ім'я та прізвище.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Телефон</label>
+                        <input type="tel" class="form-control" id="phone" name="Phone" required
+                               pattern="\+?\d{10,15}" title="Введіть коректний номер телефону"
+                               placeholder="+380XXXXXXXXX">
+                        <div class="invalid-feedback">Будь ласка, введіть коректний номер телефону.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="delivery" class="form-label">Адреса доставки</label>
+                        <input type="text" class="form-control" id="delivery" name="Delivery" required>
+                        <div class="invalid-feedback">Будь ласка, введіть адресу доставки.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="orderDetails" class="form-label">Деталі замовлення</label>
+                        <textarea class="form-control" id="orderDetails" name="OrderDetails" rows="3" readonly></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <h5>Загальна сума замовлення: <span id="modalTotalSum">@totalSum.ToString("C")</span></h5>
+                    </div>
+                    <div id="confirmationMessage" class="alert alert-success d-none">
+                        <i class="bi bi-check-circle"></i> Замовлення підтверджено!
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="confirmOrderBtn">Підтвердити замовлення</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Показуємо підтвердження після натискання на "Підтвердити замовлення"
+            document.getElementById('orderForm').addEventListener('submit', function (event) {
+                event.preventDefault(); // Забороняємо звичайне відправлення форми
+
+                // Показуємо зелену галочку
+                document.getElementById('confirmationMessage').classList.remove('d-none');
+
+                // Через 1.5 секунди перекидаємо користувача на сторінку замовлень
+                setTimeout(() => {
+                    this.submit(); // Відправляємо форму на сервер
+                }, 1500); // Час затримки
+            });
+        });
+    </script>
+}
+
+<style>
+    .input-group {
+        display: flex;
+        align-items: center;
+    }
+
+    .quantity-input {
+        width: 50px !important;
+        text-align: center;
+    }
+
+    .btn-minus, .btn-plus {
+        width: 30px;
+    }
+
+    .btn-confirm {
+        width: 100%;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const updateTotalSum = () => {
+                let totalSum = 0;
+                document.querySelectorAll('.total-price').forEach(element => {
+                    totalSum += parseFloat(element.dataset.price);
+                });
+                document.getElementById('totalSum').innerText = totalSum.toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
+                localStorage.setItem('totalSum', totalSum); // Зберігаємо загальну суму в Local Storage
+            };
+
+            const updatePrice = (input) => {
+                const unitPrice = parseFloat(input.dataset.price);
+                const totalPriceElement = input.closest('tr').querySelector('.total-price');
+                const newQuantity = parseInt(input.value);
+                const newTotalPrice = unitPrice * newQuantity;
+
+                totalPriceElement.dataset.price = newTotalPrice;
+                totalPriceElement.innerText = newTotalPrice.toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
+
+                // Зберігаємо кількість та загальну ціну в Local Storage
+                const cartId = input.closest('tr').dataset.cartId;
+                localStorage.setItem(`cartItem_${cartId}_quantity`, newQuantity);
+                localStorage.setItem(`cartItem_${cartId}_totalPrice`, newTotalPrice);
+
+                // Виклик оновлення загальної суми
+                updateTotalSum();
+            };
+
+            const loadFromLocalStorage = () => {
+                document.querySelectorAll('.quantity-input').forEach(input => {
+                    const cartId = input.closest('tr').dataset.cartId;
+                    const savedQuantity = localStorage.getItem(`cartItem_${cartId}_quantity`);
+                    const savedTotalPrice = localStorage.getItem(`cartItem_${cartId}_totalPrice`);
+
+                    if (savedQuantity) {
+                        input.value = savedQuantity;
+                    }
+                    if (savedTotalPrice) {
+                        const totalPriceElement = input.closest('tr').querySelector('.total-price');
+                        totalPriceElement.dataset.price = savedTotalPrice;
+                        totalPriceElement.innerText = parseFloat(savedTotalPrice).toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
+                    }
+                });
+
+                const savedTotalSum = localStorage.getItem('totalSum');
+                if (savedTotalSum) {
+                    document.getElementById('totalSum').innerText = parseFloat(savedTotalSum).toLocaleString('uk-UA', { style: 'currency', currency: 'UAH' });
+                }
+            };
+
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                input.addEventListener('input', function () {
+                    if (this.value < 1) this.value = 1; // Не дозволяти значення менше 1
+                    updatePrice(this);
+                });
+            });
+
+            document.querySelectorAll('.btn-minus, .btn-plus').forEach(button => {
+                button.addEventListener('click', function () {
+                    const input = this.parentElement.querySelector('.quantity-input');
+                    let quantity = parseInt(input.value);
+                    if (this.classList.contains('btn-minus') && quantity > 1) {
+                        quantity--;
+                    } else if (this.classList.contains('btn-plus')) {
+                        quantity++;
+                    }
+                    input.value = quantity;
+
+                    // Оновлюємо ціну та загальну суму
+                    updatePrice(input);
+                });
+            });
+
+            loadFromLocalStorage(); // Завантаження даних з Local Storage при завантаженні сторінки
+            updateTotalSum(); // Початкове оновлення загальної суми
+
+            // Заповнення деталей замовлення при відкритті модального вікна
+            document.getElementById('orderModal').addEventListener('show.bs.modal', function () {
+                const orderDetails = Array.from(document.querySelectorAll('tbody tr')).map(row => {
+                    const name = row.querySelector('td:nth-child(3)').innerText;
+                    const quantity = row.querySelector('.quantity-input').value;
+                    const totalPrice = row.querySelector('.total-price').innerText;
+                    return `${name} - ${quantity} шт. - ${totalPrice}`;
+                }).join('\n');
+                document.getElementById('orderDetails').value = orderDetails;
+
+                // Встановлення загальної суми в модальному вікні
+                const totalSum = document.getElementById('totalSum').innerText;
+                document.getElementById('modalTotalSum').innerText = totalSum; // Передаємо загальну суму в модальне вікно
+            });
+
+            // Видалення обробника подій для кнопки "Підтвердити замовлення"
+            // document.getElementById('confirmOrderBtn').addEventListener('click', function () {
+            //     // Ховаємо форму і показуємо повідомлення про підтвердження замовлення
+            //     document.getElementById('orderForm').style.display = 'none';
+            //     document.getElementById('confirmationMessage').style.display = 'block';
+            // });
+        });
+    </script>
+}
+
+

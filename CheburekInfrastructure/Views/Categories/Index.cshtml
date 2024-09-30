@@ -1,0 +1,27 @@
+﻿@model IEnumerable<CheburekInfrastructure.Models.Category>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Категорії</h1>
+
+<p>
+    <a asp-action="Create">Додати нову</a>
+</p>
+
+<div class="card-list">
+    @foreach (var item in Model)
+    {
+        <div class="card">
+            <h2>@item.Name</h2>
+            <img src="@item.ImagePath" alt="Product Image" class="card-image" />
+            <div class="card-actions">
+                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Подробиці</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+            </div>
+        </div>
+    }
+</div>
+
